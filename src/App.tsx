@@ -37,12 +37,25 @@ function Pending() {
 }
 
 export default function App() {
-  const { session, profile, loading } = useAuth()
+  const { session, profile, loading, profileError, refreshProfile } = useAuth()
   const { role, canWrite } = useRole()
 
   if (!configured) return <NotConfigured />
   if (loading) return <div className="center-page muted">กำลังโหลด…</div>
   if (!session) return <Login />
+  if (!profile && profileError) return (
+    <div className="center-page">
+      <div className="card narrow">
+        <h1>โหลดโปรไฟล์ไม่ได้</h1>
+        <p>{profileError === 'no-profile'
+          ? 'ไม่พบโปรไฟล์ของบัญชีนี้ (อาจสมัครก่อนรันสคริปต์ฐานข้อมูล)'
+          : `ฐานข้อมูลตอบกลับว่า: ${profileError}`}</p>
+        <p className="muted small">Admin ให้รันไฟล์ supabase/fix-access.sql ใน Supabase SQL Editor แล้วกดลองใหม่</p>
+        <button className="btn" onClick={() => refreshProfile()}>ลองใหม่</button>
+        <button className="btn secondary" onClick={() => supabase.auth.signOut()}>ออกจากระบบ</button>
+      </div>
+    </div>
+  )
   if (!profile) return <div className="center-page muted">กำลังโหลดโปรไฟล์…</div>
   if (role === 'pending') return <Pending />
 

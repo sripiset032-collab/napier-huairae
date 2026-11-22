@@ -291,6 +291,12 @@ left join cur on cur.plot_id = p.id
 left join h on h.plot_id = p.id
 left join c on c.plot_id = p.id;
 
+-- ---------- API access (Row Level Security above still decides what each user sees) ----------
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on all tables in schema public to authenticated;
+grant usage, select on all sequences in schema public to authenticated;
+grant execute on all functions in schema public to authenticated;
+
 -- ---------- Photo storage ----------
 insert into storage.buckets (id, name, public) values ('photos','photos', false)
 on conflict (id) do nothing;

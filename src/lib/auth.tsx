@@ -7,20 +7,23 @@ interface AuthState {
   session: Session | null
   profile: Profile | null
   loading: boolean
+  profileError: string | null
   refreshProfile: () => Promise<void>
 }
 
-const AuthCtx = createContext<AuthState>({ session: null, profile: null, loading: true, refreshProfile: async () => {} })
+const AuthCtx = createContext<AuthState>({ session: null, profile: null, loading: true, profileError: null, refreshProfile: async () => {} })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [profileError, setProfileError] = useState<string | null>(null)
 
   const loadProfile = async (s: Session | null) => {
-    if (!s) { setProfile(null); return }
-    const { data } = await supabase.from('profiles').select('*').eq('id', s.user.id).maybeSingle()
+    if (!s) { setProfile(null); setProfileError(null); return }
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', s.user.id).maybeSingle()
     setProfile(data as Profile | null)
+    setProfileError(error ? error.message : data ? null : 'no-profile')
   }
 
   useEffect(() => {
@@ -38,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthCtx.Provider value={{ session, profile, loading, refreshProfile: () => loadProfile(session) }}>
+    <AuthCtx.Provider value={{ session, profile, loading, profileError, refreshProfile: () => loadProfile(session) }}>
       {children}
     </AuthCtx.Provider>
   )
